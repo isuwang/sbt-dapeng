@@ -30,23 +30,23 @@ object ThriftGeneratorPlugin extends AutoPlugin{
 
   def generateFiles(sourceFilePath: String, targetFilePath: String) = {
 
-    val javaFilePath = targetFilePath + "/java"
-    if (!file(javaFilePath).exists()) {
-      file(targetFilePath).mkdir()
+    val javaFileFolder = new File(targetFilePath + "/java")
+    if (!javaFileFolder.exists()) {
+      println(s" java file folder does no exists. create new one: ${javaFileFolder}")
+      javaFileFolder.mkdir()
     }
-    println(s"sourceFilePath: ${sourceFilePath}, targetFilePath: ${javaFilePath}")
     Scrooge.main(Array("-gen", "java", "-all",
       "-in", sourceFilePath,
-      "-out", javaFilePath))
+      "-out", targetFilePath))
 
-    val scalaFilePath = targetFilePath + "/scala"
-    if (!file(scalaFilePath).exists()) {
-      file(scalaFilePath).mkdir()
+    val scalaFileFolder = new File(targetFilePath + "/java")
+    if (!scalaFileFolder.exists()) {
+      println(s" java file folder does no exists. create new one: ${scalaFileFolder}")
+      scalaFileFolder.mkdir()
     }
-    println(s" sourceFilePath: ${sourceFilePath}, targetFilePath: ${scalaFilePath}")
     Scrooge.main(Array("-gen", "scala", "-all",
       "-in", sourceFilePath,
-      "-out", scalaFilePath))
+      "-out", targetFilePath))
 
   }
 
