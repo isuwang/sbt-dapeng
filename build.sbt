@@ -10,6 +10,9 @@ organization := "com.isuwang"
 
 resolvers += Resolver.mavenLocal
 
+addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.4.1")
+addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "0.9.3")
+
 libraryDependencies ++= Seq(
   "com.isuwang" %% "dapeng-code-generator" % "1.2.1"
 )
