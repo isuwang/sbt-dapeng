@@ -6,13 +6,13 @@ import sbt.Keys._
 import sbtdocker.ImageName
 import sbtdocker.DockerPlugin.autoImport.dockerfile
 import com.typesafe.sbt.GitPlugin.autoImport._
-
+import sbtassembly.AssemblyKeys
 /**
   * Created by lihuimin on 2017/11/7.
   */
 object ImageGeneratorPlugin extends AutoPlugin {
 
-  override def requires = sbtdocker.DockerPlugin&&com.typesafe.sbt.GitPlugin
+  override def requires = sbtdocker.DockerPlugin&&com.typesafe.sbt.GitPlugin&&sbtassembly.AssemblyPlugin
 
   override lazy val projectSettings = Seq(
     dockerfile in docker := {
@@ -26,7 +26,7 @@ object ImageGeneratorPlugin extends AutoPlugin {
         lazy val sourceFilesPath = (baseDirectory in Compile).value.getAbsolutePath + System.getProperty("file.separator") +"docker"+ System.getProperty("file.separator") + "startup.sh"
         lazy val startupFile = new File(sourceFilesPath)
 
-        copy((packageBin in Compile).value, containerHome + "/apps")
+        copy((AssemblyKeys.assembly in Compile).value, containerHome + "/apps")
         copy(startupFile, containerHome + "/bin/")
         run("chmod", "+x", containerHome + "/bin/startup.sh")
         workDir(containerHome + "/bin")
