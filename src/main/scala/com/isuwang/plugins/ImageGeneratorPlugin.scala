@@ -23,7 +23,7 @@ object ImageGeneratorPlugin extends AutoPlugin {
         val containerHome = "/dapeng-container"
         run("mkdir", "-p", containerHome)
 
-        lazy val sourceFilesPath = (baseDirectory in Compile).value.getAbsolutePath + System.getProperty("file.separator") + "startup.sh"
+        lazy val sourceFilesPath = (baseDirectory in Compile).value.getAbsolutePath + System.getProperty("file.separator") +"docker"+ System.getProperty("file.separator") + "startup.sh"
         lazy val startupFile = new File(sourceFilesPath)
 
         copy((packageBin in Compile).value, containerHome + "/apps")
