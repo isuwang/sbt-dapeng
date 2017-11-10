@@ -39,7 +39,7 @@ object ThriftGeneratorPlugin extends AutoPlugin{
       "-in", sourceFilePath,
       "-out", targetFilePath))
 
-    val scalaFileFolder = new File(targetFilePath + "/java")
+    val scalaFileFolder = new File(targetFilePath + "/scala")
     if (!scalaFileFolder.exists()) {
       println(s" java file folder does no exists. create new one: ${scalaFileFolder}")
       scalaFileFolder.mkdir()
