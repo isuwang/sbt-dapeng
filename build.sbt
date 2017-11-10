@@ -16,5 +16,5 @@ addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.5")
 
 libraryDependencies ++= Seq(
   "com.isuwang" %% "dapeng-code-generator" % "1.2.1",
-  //"com.isuwang" % "dapeng-bootstrap"% "1.2.1"
+  "com.isuwang" % "dapeng-bootstrap"% "1.2.1"
 )
