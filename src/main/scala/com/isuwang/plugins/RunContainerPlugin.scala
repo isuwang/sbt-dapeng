@@ -30,7 +30,6 @@ object RunContainerPlugin  extends AutoPlugin {
     System.setProperty("soa.apidoc.port","8192")
     System.setProperty("soa.zookeeper.kafka.host","192.168.99.100:2181")
     System.setProperty("soa.zookeeper.host","192.168.99.100:2181")
-    System.setProperty("soa.run.mode","native")
     System.setProperty("soa.transactional.enable","false")
     System.setProperty("soa.monitor.enable","false")
     System.setProperty("soa.container.port","9095")
