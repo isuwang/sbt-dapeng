@@ -21,7 +21,6 @@ class ContainerBootstrap {
     val bootstrapClass = classOf[Bootstrap].getName
     val threadGroup = new ThreadGroup(bootstrapClass)
     val myClassLoader = classOf[Bootstrap].getClassLoader
-    val containerClassLoader = classOf[SpringContainer].getClassLoader
 
     val bootstrapThread = new Thread(threadGroup, () => {
 
@@ -86,7 +85,7 @@ class ContainerBootstrap {
       result.append(threads(i))
       i += 1
     }
-    result.toList // note: result should be modifiable
+    result.toList
   }
 
   protected def joinThread(thread: Thread, timeoutMsecs: Long): Unit = {
