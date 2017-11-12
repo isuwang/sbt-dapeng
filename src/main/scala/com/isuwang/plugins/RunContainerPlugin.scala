@@ -55,25 +55,5 @@ object RunContainerPlugin  extends AutoPlugin {
 
 
 
-  def getPathOfDapengContainer(): List[URL] ={
-    val dapengContainerJar = classOf[ContainerStartup].getProtectionDomain.getCodeSource.getLocation
-    val logbackCoreJar = classOf[ch.qos.logback.core.Context].getProtectionDomain.getCodeSource.getLocation
-    val logbackClassicJar = classOf[ch.qos.logback.classic.Logger].getProtectionDomain.getCodeSource.getLocation
-    val slf4jJar =  classOf[org.slf4j.Logger].getProtectionDomain.getCodeSource.getLocation
-    val codehausJar =  classOf[org.codehaus.janino.Access].getProtectionDomain.getCodeSource.getLocation
-    val codehausCommonJar = classOf[IScriptEvaluator].getProtectionDomain.getCodeSource.getLocation
-    val nettyJar = classOf[ByteBuf].getProtectionDomain.getCodeSource.getLocation
-    val registryZookeeperJar =classOf[RegistryAgentImpl].getProtectionDomain.getCodeSource.getLocation
-    val apiDocJar = classOf[ApiServiceController].getProtectionDomain.getCodeSource.getLocation
-    val monitorJar =classOf[MonitorServiceClient].getProtectionDomain.getCodeSource.getLocation
-    val remotingNettyJar = classOf[SoaClient].getProtectionDomain.getCodeSource.getLocation
-    val transactionJar = classOf[GlobalTransactionManager].getProtectionDomain.getCodeSource.getLocation
-    val quartz=classOf[Calendar].getProtectionDomain.getCodeSource.getLocation
-    val kafkaJar = classOf[KafkaConsumer].getProtectionDomain.getCodeSource.getLocation
-
-    List(dapengContainerJar,logbackCoreJar,logbackClassicJar,slf4jJar,codehausJar,codehausCommonJar,nettyJar,registryZookeeperJar,apiDocJar,monitorJar,remotingNettyJar,transactionJar,quartz,kafkaJar)
-  }
-
-
 }
 
