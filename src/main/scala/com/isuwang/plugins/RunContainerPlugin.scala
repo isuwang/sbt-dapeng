@@ -2,19 +2,9 @@ package com.isuwang.plugins
 
 import java.net.URL
 
-import com.isuwang.dapeng.container.ContainerStartup
+import org.slf4j.LoggerFactory
 import sbt.Keys._
 import sbt.{AutoPlugin, _}
-import _root_.io.netty.buffer.ByteBuf
-import com.isuwang.dapeng.doc.ApiServiceController
-import com.isuwang.dapeng.message.consumer.kafka.KafkaConsumer
-import com.isuwang.dapeng.monitor.api.MonitorServiceClient
-import com.isuwang.dapeng.registry.zookeeper.RegistryAgentImpl
-import com.isuwang.dapeng.remoting.netty.SoaClient
-import com.isuwang.dapeng.transaction.GlobalTransactionManager
-import org.codehaus.commons.compiler.IScriptEvaluator
-import org.quartz.Calendar
-import org.slf4j.{Logger, LoggerFactory}
 /**
   * Created by lihuimin on 2017/11/8.
   */
@@ -40,13 +30,12 @@ object RunContainerPlugin  extends AutoPlugin {
   override lazy val projectSettings=Seq(
       runContainer := {
         logger.info("starting dapeng container....")
-        val dependentClasspaths=(managedClasspath in Compile).value.map(
+        val dependentClasspaths=(fullClasspath in Compile).value.map(
           _.data.toURI.toURL
         )
 
         val projectPath = (baseDirectory in Compile).value.getAbsolutePath
-        val serviceJarURL=(packageBin in Compile).value.toURI.toURL
-        val classpathsWithDapeng=serviceJarURL::dependentClasspaths.toList
+        val classpathsWithDapeng=dependentClasspaths.toList
         runDapeng(projectPath,classpathsWithDapeng)
       },
 

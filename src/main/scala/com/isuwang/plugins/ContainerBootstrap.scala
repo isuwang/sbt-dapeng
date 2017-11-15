@@ -17,10 +17,10 @@ class ContainerBootstrap {
 
   def bootstrap(appClasspaths: Seq[URL]): Unit = {
     val bootstrapClass = classOf[Bootstrap].getName
-    val threadGroup = new ThreadGroup(bootstrapClass)
+    val threadGroup = new IsolatedThreadGroup(bootstrapClass)
     val myClassLoader = classOf[Bootstrap].getClassLoader
 
-//    val bootstrapThread = new Thread(threadGroup, () => {
+    val bootstrapThread = new Thread(threadGroup, () => {
 
       try {
 
@@ -47,11 +47,11 @@ class ContainerBootstrap {
           logger.error(ex.getMessage, ex)
         }
       }
-//    }, bootstrapClass + ".main()")
-//
-//    bootstrapThread.start()
-//
-//    joinNonDaemonThreads(threadGroup)
+    }, bootstrapClass + ".main()")
+
+    bootstrapThread.start()
+
+    joinNonDaemonThreads(threadGroup)
   }
 
   def joinNonDaemonThreads(threadGroup: ThreadGroup): Unit = {
@@ -100,4 +100,25 @@ class ContainerBootstrap {
     }
   }
 
+  class IsolatedThreadGroup (name:String)extends ThreadGroup(name:String) {
+
+    private var uncaughtException : Throwable = null // synchronize access to this
+
+    override def uncaughtException(thread :Thread , throwable: Throwable){
+      if (throwable.isInstanceOf[ThreadDeath])
+        return // harmless
+
+      this.synchronized {
+        if (uncaughtException == null) { // only remember the first one
+          uncaughtException = throwable // will be reported eventually
+        }
+      }
+
+      logger.warn("warn",throwable)
+    }
+
+
+  }
+
 }
+
