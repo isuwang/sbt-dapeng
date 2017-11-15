@@ -1,11 +1,9 @@
 package com.isuwang.plugins
 
-import java.lang.reflect.{Field, Method}
-import java.net.{URL, URLClassLoader}
+import java.net.URL
 
 import com.isuwang.dapeng.bootstrap.Bootstrap
 import com.isuwang.dapeng.bootstrap.classloader._
-import com.isuwang.dapeng.container.spring.SpringContainer
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable.ListBuffer
@@ -22,7 +20,7 @@ class ContainerBootstrap {
     val threadGroup = new ThreadGroup(bootstrapClass)
     val myClassLoader = classOf[Bootstrap].getClassLoader
 
-    val bootstrapThread = new Thread(threadGroup, () => {
+//    val bootstrapThread = new Thread(threadGroup, () => {
 
       try {
 
@@ -49,11 +47,11 @@ class ContainerBootstrap {
           logger.error(ex.getMessage, ex)
         }
       }
-    }, bootstrapClass + ".main()")
-
-    bootstrapThread.start()
-
-    joinNonDaemonThreads(threadGroup)
+//    }, bootstrapClass + ".main()")
+//
+//    bootstrapThread.start()
+//
+//    joinNonDaemonThreads(threadGroup)
   }
 
   def joinNonDaemonThreads(threadGroup: ThreadGroup): Unit = {
