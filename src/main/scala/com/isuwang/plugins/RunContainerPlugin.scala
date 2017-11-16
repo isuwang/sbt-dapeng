@@ -8,22 +8,26 @@ import sbt.{AutoPlugin, _}
 /**
   * Created by lihuimin on 2017/11/8.
   */
-object RunContainerPlugin  extends AutoPlugin {
+object RunContainerPlugin  extends AutoPlugin  {
 
   val runContainer = taskKey[Unit]("run dapeng container")
   val logger = LoggerFactory.getLogger(getClass)
 
 
-  def runDapeng(projectPath:String,appClasspaths:Seq[URL]): Unit ={
+  def runDapeng(projectPath:String,appClasspaths:Seq[URL]) : Unit ={
     System.setProperty("soa.base", projectPath)
     System.setProperty("soa.run.mode", "maven")
     System.setProperty("soa.apidoc.port","8192")
-    System.setProperty("soa.zookeeper.kafka.host","192.168.99.100:2181")
-    System.setProperty("soa.zookeeper.host","192.168.99.100:2181")
+    System.setProperty("soa.zookeeper.kafka.host","127.0.0.1:2181")
+    System.setProperty("soa.zookeeper.host","127.0.0.1:2181")
     System.setProperty("soa.transactional.enable","false")
     System.setProperty("soa.monitor.enable","false")
     System.setProperty("soa.container.port","9095")
-    new ContainerBootstrap().bootstrap(appClasspaths)
+    val bootstrapThread = new Thread( () => {
+      new ContainerBootstrap().bootstrap(appClasspaths)
+    })
+    bootstrapThread.start()
+    bootstrapThread.join()
   }
 
 
