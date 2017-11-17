@@ -64,6 +64,7 @@ object DbGeneratorPlugin extends AutoPlugin {
   def toCaseClassEntity(tableName: String, columns: List[(String, String, String)], targetPath: String) = {
     val sb = new StringBuilder(256)
     sb.append(" package com.isuwang.soa.scala.entity \r\n")
+    sb.append("\r\n import java.sql.Timestamp \r\n")
     if (columns.exists(c => List("DATETIME", "DATE", "TIMESTAMP").contains(c._2))) {
       sb.append(" import java.sql.Timestamp \r\n")
     }
