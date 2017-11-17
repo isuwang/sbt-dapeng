@@ -30,6 +30,7 @@ object ThriftGeneratorPlugin extends AutoPlugin{
 
   def generateFiles(sourceFilePath: String, targetFilePath: String) = {
 
+    println("Welcome to use generate plugin")
     val javaFileFolder = new File(targetFilePath + "/java")
     if (!javaFileFolder.exists()) {
       println(s" java file folder does no exists. create new one: ${javaFileFolder}")

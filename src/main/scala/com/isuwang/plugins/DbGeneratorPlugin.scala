@@ -51,8 +51,9 @@ object DbGeneratorPlugin extends AutoPlugin{
         val connection  = connectJdbc(ipAddress,db,user,passwd)
 
         val columns = getTableColumnInfos(tableName.toLowerCase,db,connection)
+        println(s" oriTableName: ${tableName} -> tarTableName: ${toFirstUpperCamel(tableName)}")
         println(s"columns: ${columns}")
-        toCaseClassEntity("Accounts",columns,targetPath)
+        toCaseClassEntity(toFirstUpperCamel(tableName),columns,targetPath)
       }
     },
     logLevel in generatedDbEntity := Level.Debug
@@ -65,7 +66,7 @@ object DbGeneratorPlugin extends AutoPlugin{
     if (columns.exists(c => List("DATETIME","DATE","TIMESTAMP").contains(c._2))) {
       sb.append(" import java.sql.Timestamp \r\n")
     }
-    sb.append(s" case class ${toFirstUpperCamel(tableName)} ( \r\n")
+    sb.append(s" case class ${tableName} ( \r\n")
     columns.foreach(column => {
       sb.append(s" /** ${column._3} */ \r\n")
       sb.append( toCamel(column._1)).append(": ").append(toScalaFieldType(column._2)).append(",\r\n")
@@ -76,7 +77,7 @@ object DbGeneratorPlugin extends AutoPlugin{
     sb.append(")")
 
 
-    val path = targetPath + "/src/main/scala/com/isuwang/soa/" + s"${toFirstUpperCamel(tableName)}.scala"
+    val path = targetPath + "/src/main/scala/com/isuwang/soa/" + s"${tableName}.scala"
     generateEntityFile(sb.toString(), path)
 
   }
@@ -164,7 +165,7 @@ object DbGeneratorPlugin extends AutoPlugin{
   }
 
   /**
-    * sss_xxx => SssXxx
+    * sss_xxx => sssXxx
     * @param name
     * @return
     */
@@ -177,17 +178,17 @@ object DbGeneratorPlugin extends AutoPlugin{
   }
 
   /**
-    * aaa_bbb => aaaBbb
+    * aaa_bbb => AaaBbb
     * @param name
     * @return
     */
   def toFirstUpperCamel(name: String): String = {
-    val t = name.split("_").map(item => {
+    name.split("_").map(item => {
       val result = item.toLowerCase
       result.charAt(0).toUpper + result.substring(1)
     }).mkString("")
-    t.replaceFirst(s"${t.charAt(0)}",s"${t.charAt(0).toUpper}")
   }
+
 
 }
 
