@@ -9,20 +9,21 @@ import sbt._
 
 import scala.collection.mutable
 
-object DbGeneratorPlugin extends AutoPlugin{
+object DbGeneratorPlugin extends AutoPlugin {
 
   val driver = "com.mysql.jdbc.Driver"
   val user = "root"
   val passwd = "root"
 
-  val enumRegx = """(.*\s*),(\s*\d:\s*.*\(\s*[a-zA-Z]+\)\s*;)+""".r
-  val singleEnumRegx = """\s*(\d):\s*([\u4e00-\u9fa5]+)\(([a-zA-Z]+)\)""".r
+  val enumRegx = """(.*\s*),(\s*\d:\s*.*\(\s*[a-zA-Z]+\)\s*;?)+""".r
+  val singleEnumRegx = """\s*([\d]+):\s*([\u4e00-\u9fa5]+|[\w]+)\(([a-zA-Z]+)\)""".r
 
   val generatedDbEntity = inputKey[Unit]("A demo input task.")
+
   import complete.DefaultParsers._
 
 
-  override lazy val projectSettings=Seq(
+  override lazy val projectSettings = Seq(
     generatedDbEntity := {
       val help =
         """
@@ -48,12 +49,12 @@ object DbGeneratorPlugin extends AutoPlugin{
         val tableName = args(2)
         val targetPath = (baseDirectory in Compile).value.getAbsolutePath
 
-        val connection  = connectJdbc(ipAddress,db,user,passwd)
+        val connection = connectJdbc(ipAddress, db, user, passwd)
 
-        val columns = getTableColumnInfos(tableName.toLowerCase,db,connection)
+        val columns = getTableColumnInfos(tableName.toLowerCase, db, connection)
         println(s" oriTableName: ${tableName} -> tarTableName: ${toFirstUpperCamel(tableName)}")
         println(s"columns: ${columns}")
-        toCaseClassEntity(toFirstUpperCamel(tableName),columns,targetPath)
+        toCaseClassEntity(toFirstUpperCamel(tableName), columns, targetPath)
       }
     },
     logLevel in generatedDbEntity := Level.Debug
@@ -61,19 +62,19 @@ object DbGeneratorPlugin extends AutoPlugin{
 
 
   def toCaseClassEntity(tableName: String, columns: List[(String, String, String)], targetPath: String) = {
-    val sb =new StringBuilder(256)
+    val sb = new StringBuilder(256)
     sb.append(" package com.isuwang.soa.scala.entity \r\n")
-    if (columns.exists(c => List("DATETIME","DATE","TIMESTAMP").contains(c._2))) {
+    if (columns.exists(c => List("DATETIME", "DATE", "TIMESTAMP").contains(c._2))) {
       sb.append(" import java.sql.Timestamp \r\n")
     }
     sb.append(s" case class ${tableName} ( \r\n")
     columns.foreach(column => {
       sb.append(s" /** ${column._3} */ \r\n")
-      sb.append( toCamel(column._1)).append(": ").append(toScalaFieldType(column._2)).append(",\r\n")
+      sb.append(toCamel(column._1)).append(": ").append(toScalaFieldType(column._2)).append(",\r\n")
 
-      generateEnumFile(column._1,column._3, targetPath)
+      generateEnumFile(column._1, column._3, targetPath)
     })
-    sb.delete(sb.lastIndexOf(","),sb.lastIndexOf(",")+1)
+    sb.delete(sb.lastIndexOf(","), sb.lastIndexOf(",") + 1)
     sb.append(")")
 
 
@@ -93,18 +94,18 @@ object DbGeneratorPlugin extends AutoPlugin{
   def generateEnumFile(columnName: String, columnComment: String, targetPath: String) = {
 
     columnComment match {
-      case enumRegx(a,b) => println(s" comment: ${a}, enumValue: ${b}")
+      case enumRegx(a, b) => println(s" comment: ${a}, enumValue: ${b}")
         val enums: Array[(String, String)] = b.split(";").map(item => {
           item match {
-            case singleEnumRegx(index,cnChars, enChars) =>
+            case singleEnumRegx(index, cnChars, enChars) =>
               println(s"foundEnumValue index: ${index}  cnChars:${cnChars}  enChars: ${enChars}")
-              (index,enChars)
-            case _ => throw new ParseException(" invalid enum format: should be:  xxx,1:中文1(englishWord1);2:中文2(englishWord2);",0)
+              (index, enChars)
+            case _ => throw new ParseException(s"invalid enum format: ${item} should looks like Int:xxx(englishWord)", 0)
           }
         })
 
         val path = targetPath + "/src/main/scala/com/isuwang/soa/" + s"${toFirstUpperCamel(columnName)}.scala"
-        generateEntityFile(toEnumFileContent(enums),path)
+        generateEntityFile(toEnumFileContent(enums), path)
 
       case _ => println(s" Not match enum comment, skipped....${columnComment}")
     }
@@ -127,23 +128,27 @@ object DbGeneratorPlugin extends AutoPlugin{
   }
 
   def toScalaFieldType(tableFieldType: String): String = {
-    tableFieldType match {
-      case "INT" | "SMALLINT" | "TINYINT" | "int" | "smallint" | "tinyint" => "Int"
-      case "CHAR" | "char" | "VARCHAR" | "varchar" => "String"
-      case "DECIMAL" | "decimal" => "BigDecimal"
-      case "DATETIME" | "datetime" | "DATE" | "date" | "TIMESTAMP" | "timestamp" => "Timestamp"
+    tableFieldType.toUpperCase() match {
+      case "INT" | "SMALLINT" | "TINYINT" => "Int"
+      case "CHAR" | "VARCHAR" => "String"
+      case "DECIMAL" => "BigDecimal"
+      case "DATETIME" | "DATE" | "TIMESTAMP" => "Timestamp"
+      case "ENUM" => "String"
+      case _ => throw new ParseException(s"tableFieldType = ${tableFieldType} 无法识别", 1023)
     }
   }
 
-  def connectJdbc(ip: String, db: String, user: String="root", passwd: String="root"): Connection = {
+  def connectJdbc(ip: String, db: String, user: String = "root", passwd: String = "root"): Connection = {
 
     val url = s"jdbc:mysql://${ip}/${db}?useUnicode=true&characterEncoding=utf8"
 
-    try {Class.forName(driver)} catch {
+    try {
+      Class.forName(driver)
+    } catch {
       case e: Exception => println(s" failed to instance jdbc driver: ${e.getStackTrace}")
     }
 
-    DriverManager.getConnection(url,user,passwd)
+    DriverManager.getConnection(url, user, passwd)
   }
 
 
@@ -153,19 +158,67 @@ object DbGeneratorPlugin extends AutoPlugin{
     val sqlStatement = connection.prepareStatement(sql)
 
     val resultSet = sqlStatement.executeQuery()
-    val columnInfos = mutable.MutableList[(String,String,String)]()
-    while(resultSet.next()) {
-      val columnInfo = (resultSet.getString("column_name"),
+    val columnInfos = mutable.MutableList[(String, String, String)]()
+    while (resultSet.next()) {
+      val columnInfo = (
+        keywordConvert(resultSet.getString("column_name")),
         resultSet.getString("data_type"),
-        resultSet.getString("column_comment"))
+        resultSet.getString("column_comment")
+      )
       columnInfos += columnInfo
     }
 
     columnInfos.toList
   }
 
+  def keywordConvert(word: String) = {
+    if (List("abstract",
+      "case",
+      "catch",
+      "class",
+      "def",
+      "do",
+      "else",
+      "extends",
+      "false",
+      "final",
+      "finally",
+      "for",
+      "forSome",
+      "if",
+      "implicit",
+      "import",
+      "lazy",
+      "macro",
+      "match",
+      "new",
+      "null",
+      "object",
+      "override",
+      "package",
+      "private",
+      "protected",
+      "return",
+      "sealed",
+      "super",
+      "this",
+      "throw",
+      "trait",
+      "try",
+      "true",
+      "type",
+      "val",
+      "var",
+      "while",
+      "with",
+      "yield").exists(_.equals(word))) {
+      s"`${word}`"
+    } else word
+  }
+
   /**
     * sss_xxx => sssXxx
+    *
     * @param name
     * @return
     */
@@ -174,11 +227,12 @@ object DbGeneratorPlugin extends AutoPlugin{
       val result = item.toLowerCase
       result.charAt(0).toUpper + result.substring(1)
     }).mkString("")
-    camel.replaceFirst(s"${camel.charAt(0)}",s"${camel.charAt(0).toLower}")
+    camel.replaceFirst(s"${camel.charAt(0)}", s"${camel.charAt(0).toLower}")
   }
 
   /**
     * aaa_bbb => AaaBbb
+    *
     * @param name
     * @return
     */
