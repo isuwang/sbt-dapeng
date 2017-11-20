@@ -46,7 +46,9 @@ object RunContainerPlugin  extends AutoPlugin  {
             propertiesFile = resource
           }
         })
-        loadSystemProperties(propertiesFile)
+        if(propertiesFile!=null){
+          loadSystemProperties(propertiesFile)
+        }
         val dependentClasspaths=(fullClasspath in Compile).value.map(
           _.data.toURI.toURL
         )
