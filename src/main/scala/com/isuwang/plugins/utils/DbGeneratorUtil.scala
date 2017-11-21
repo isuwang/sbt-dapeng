@@ -12,7 +12,7 @@ import scala.collection.mutable
 object DbGeneratorUtil {
 
   val driver = "com.mysql.jdbc.Driver"
-  val enumRegx = """(.*\s*),(\s*\d:\s*.*\(\s*[a-zA-Z]+\)\s*;?)+""".r
+  val enumRegx = """(.*\s*),(\s*\d:\s*.*\(\s*[\d|a-zA-Z|_]+\)\s*;?)+""".r
   val singleEnumRegx = """\s*([\d]+):\s*([\u4e00-\u9fa5|\w|-]+)\(([\d|a-zA-Z|_]+)\)""".r
 
   def generateEntityFile(fileContent: String, targetPath: String, fileName: String) = {
@@ -31,6 +31,7 @@ object DbGeneratorUtil {
         val enums: Array[(String, String)] = b.split(";").map(item => {
           item match {
             case singleEnumRegx(index, cnChars, enChars) =>
+
 //              println(s"foundEnumValue ${columnName} =>  index: ${index}  cnChars:${cnChars}  enChars: ${enChars}")
               (index, enChars)
             case _ => throw new ParseException(s"invalid enum format: ${columnName} -> ${item} should looks like Int:xxx(englishWord)", 0)
