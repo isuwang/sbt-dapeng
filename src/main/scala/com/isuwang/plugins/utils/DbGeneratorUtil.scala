@@ -149,6 +149,10 @@ object DbGeneratorUtil {
       sb.append(s" \t\t case ${enum._1} => ${enum._2} \r\n")
     })
     sb.append(" \t\t case _ => unknown(id) \r\n")
+
+    sb.append(s" def apply(v: Int) = valueOf(v) \r\n")
+    sb.append(s" def unapply(v: ${enumClassName}): Option[Int] = Some(v.id) \r\n")
+
     sb.append(" } \r\n")
 
     sb.append(s" implicit object Accessor extends DbEnumJdbcValueAccessor[${enumClassName}](valueOf) \r\n")
