@@ -56,17 +56,17 @@ object DbGeneratorPlugin extends AutoPlugin {
         println(" start to generated db entity....args: ")
         args foreach println
 
-        val (ipAddress,db,packageName,tableName) = args.size match {
+        val (ipAddress, db, packageName, tableName) = args.size match {
           case 0 =>
             println(help)
-            ("","","","")
+            ("", "", "", "")
           case 1 => println(help)
-            ("","","","")
-          case 2 => (args(0),args(1),s"com.isuwang.soa.scala.${args(1)}","")
-          case 3 => (args(0),args(1),args(2),"")
-          case 4 => (args(0), args(1),args(2), args(3))
+            ("", "", "", "")
+          case 2 => (args(0), args(1), s"com.isuwang.soa.scala.${args(1)}", "")
+          case 3 => (args(0), args(1), args(2), "")
+          case 4 => (args(0), args(1), args(2), args(3))
           case _ => println(help)
-            ("","","","")
+            ("", "", "", "")
         }
 
         val baseTargetPath = (baseDirectory in Compile).value.getAbsolutePath
@@ -74,13 +74,13 @@ object DbGeneratorPlugin extends AutoPlugin {
 
         if (!tableName.isEmpty) {
           println(s" Found Specific tableName: ${tableName}, start to generateDbEntity..")
-          generateDbClass(tableName,db,connection,packageName,baseTargetPath)
+          generateDbClass(tableName, db, connection, packageName, baseTargetPath)
         } else {
           println(s" No specific tableName found. will generate ${db} all tables..")
 
-          getTableNamesByDb(db,connection).foreach(item => {
+          getTableNamesByDb(db, connection).foreach(item => {
             println(s" start to generated ${db}.${item} entity file...")
-            generateDbClass(item,db,connection,packageName,baseTargetPath)
+            generateDbClass(item, db, connection, packageName, baseTargetPath)
           })
         }
       }
@@ -89,14 +89,15 @@ object DbGeneratorPlugin extends AutoPlugin {
   )
 
   def generateDbClass(tableName: String, db: String, connection: Connection, packageName: String, baseTargetPath: String): Unit = {
+
     val columns = getTableColumnInfos(tableName.toLowerCase, db, connection)
-    val dbClassTemplate = toDbClassTemplate(tableName,packageName,columns)
+    val dbClassTemplate = toDbClassTemplate(tableName, packageName, columns)
     val targetPath = baseTargetPath + "/src/main/scala/" + packageName.split("\\.").mkString("/") + "/"
 
-    generateEntityFile(dbClassTemplate, targetPath + "entity/",s"${toFirstUpperCamel(tableName)}.scala")
+    generateEntityFile(dbClassTemplate, targetPath + "entity/", s"${toFirstUpperCamel(tableNameConvert(tableName))}.scala")
 
-    columns.filter(it => List("SMALLINT","TINYINT").contains(it._2.toUpperCase )).foreach(column => {
-      generateEnumFile(column._1,column._3,targetPath + "enum/",packageName,s"${toFirstUpperCamel(column._1)}.scala")
+    columns.foreach(column => {
+      generateEnumFile(tableName, column._1, column._3, targetPath + "enum/", packageName, s"${toFirstUpperCamel(tableNameConvert(tableName)) + toFirstUpperCamel(column._1)}.scala")
     })
   }
 

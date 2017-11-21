@@ -5,6 +5,7 @@ import java.sql.{Connection, DriverManager}
 import java.text.ParseException
 
 import com.isuwang.plugins.DbGeneratorPlugin
+import com.isuwang.plugins.utils.DbGeneratorUtil.toFirstUpperCamel
 
 import scala.collection.mutable
 
@@ -24,13 +25,13 @@ object DbGeneratorUtil {
     printWriter.close()
   }
 
-  def getEnumFields(columnName : String , columnComment: String) = {
+  def getEnumFields(columnName: String, columnComment: String) = {
     val result = columnComment match {
       case enumRegx(a, b) =>
         val enums: Array[(String, String)] = b.split(";").map(item => {
           item match {
             case singleEnumRegx(index, cnChars, enChars) =>
-              println(s"foundEnumValue index: ${index}  cnChars:${cnChars}  enChars: ${enChars}")
+//              println(s"foundEnumValue ${columnName} =>  index: ${index}  cnChars:${cnChars}  enChars: ${enChars}")
               (index, enChars)
             case _ => throw new ParseException(s"invalid enum format: ${columnName} -> ${item} should looks like Int:xxx(englishWord)", 0)
           }
@@ -43,16 +44,18 @@ object DbGeneratorUtil {
     result
   }
 
-  def generateEnumFile(columnName: String, columnComment: String, targetPath: String, packageName: String, fileName: String) = {
-    val enumFields = getEnumFields(columnName,columnComment)
+  def generateEnumFile(tableName: String, columnName: String, columnComment: String, targetPath: String, packageName: String, fileName: String) = {
+    val enumFields = getEnumFields(columnName, columnComment)
     if (enumFields.size > 0) {
-      generateEntityFile(toEnumFileTemplate(enumFields, packageName, columnName), targetPath, fileName)
+      println(s"foundEnumValue ${columnName} =>  size = ${enumFields.size}")
+      generateEntityFile(toEnumFileTemplate(tableName, enumFields, packageName, columnName), targetPath, fileName)
     }
   }
 
 
   def toDbClassTemplate(tableName: String, packageName: String, columns: List[(String, String, String)]) = {
     val sb = new StringBuilder(256)
+    val className = toFirstUpperCamel(tableNameConvert(tableName))
     sb.append(s" package ${packageName}.entity \r\n")
 
     sb.append("\r\n import java.sql.Timestamp \r\n")
@@ -63,15 +66,15 @@ object DbGeneratorUtil {
 
     sb.append(" import wangzx.scala_commons.sql.ResultSetMapper \r\n\r\n ")
 
-    sb.append(s" case class ${tableName} ( \r\n")
+    sb.append(s" case class ${className} ( \r\n")
     columns.foreach(column => {
-      val hasValidEnum: Boolean = !getEnumFields(column._1 , column._3).isEmpty
+      val hasValidEnum: Boolean = !getEnumFields(column._1, column._3).isEmpty
       sb.append(s" /** ${column._3} */ \r\n")
-      sb.append(toCamel(column._1)).append(": ").append(
-        if (hasValidEnum) toFirstUpperCamel(column._1) else toScalaFieldType(column._2)
+      sb.append(toCamel(keywordConvert(column._1))).append(": ").append(
+        if (hasValidEnum)toFirstUpperCamel(tableNameConvert(tableName)) + toFirstUpperCamel(column._1) else toScalaFieldType(column._2)
       ).append(",\r\n")
     })
-    sb.delete(sb.lastIndexOf(","), sb.lastIndexOf(",") + 1)
+    if (sb.contains(",")) sb.delete(sb.lastIndexOf(","), sb.lastIndexOf(",") + 1)
     sb.append(") \t\n \t\n")
 
     //添加数据库的隐式转换
@@ -81,8 +84,8 @@ object DbGeneratorUtil {
     *  }
     *
     * */
-    sb.append(s" object ${tableName} { \r\n")
-    sb.append(s" \timplicit val resultSetMapper: ResultSetMapper[${tableName}] = ResultSetMapper.meterial[${tableName}] \r\n")
+    sb.append(s" object ${className} { \r\n")
+    sb.append(s" \timplicit val resultSetMapper: ResultSetMapper[${className}] = ResultSetMapper.meterial[${className}] \r\n")
     sb.append(" }")
 
     sb.toString()
@@ -106,9 +109,9 @@ object DbGeneratorUtil {
     * @param enums
     * @return
     */
-  def toEnumFileTemplate(enums: List[(String, String)], packageName: String, columnName: String): String = {
+  def toEnumFileTemplate(tableName: String, enums: List[(String, String)], packageName: String, columnName: String): String = {
     val sb = new StringBuilder(256)
-    val enumClassName = toFirstUpperCamel(columnName)
+    val enumClassName = toFirstUpperCamel(tableNameConvert(tableName)) + toFirstUpperCamel(columnName)
     sb.append(s" package ${packageName}.enum \r\n")
     sb.append(" import wangzx.scala_commons.sql.DbEnum \r\n")
     sb.append(" import wangzx.scala_commons.sql._ \r\n")
@@ -163,7 +166,7 @@ object DbGeneratorUtil {
     val columnInfos = mutable.MutableList[(String, String, String)]()
     while (resultSet.next()) {
       val columnInfo = (
-        keywordConvert(resultSet.getString("column_name")),
+        resultSet.getString("column_name"),
         resultSet.getString("data_type"),
         resultSet.getString("column_comment")
       )
@@ -249,7 +252,7 @@ object DbGeneratorUtil {
   def toScalaFieldType(tableFieldType: String): String = {
     tableFieldType.toUpperCase() match {
       case "INT" | "SMALLINT" | "TINYINT" => "Int"
-      case "BIGINT" => "BIGINT"
+      case "BIGINT" => "Long"
       case "CHAR" | "VARCHAR" => "String"
       case "DECIMAL" | "DOUBLE" | "FLOAT" => "BigDecimal"
       case "DATETIME" | "DATE" | "TIMESTAMP" => "Timestamp"
@@ -284,5 +287,16 @@ object DbGeneratorUtil {
     }
 
     tableNames
+  }
+
+  def tableNameConvert(tableName: String): String = {
+    if (tableName.endsWith("ies")) tableName.substring(0, tableName.length - 3) + "y"
+    else if (tableName.endsWith("ses")) tableName.substring(0, tableName.length - 3) + "s"
+    else if (tableName.endsWith("shes")) tableName.substring(0, tableName.length - 4) + "sh"
+    else if (tableName.endsWith("ches")) tableName.substring(0, tableName.length - 4) + "ch"
+    else if (tableName.endsWith("xes")) tableName.substring(0, tableName.length - 3) + "x"
+    else if (tableName.endsWith("ves")) tableName.substring(0, tableName.length - 3) + "f?"
+    else if (tableName.endsWith("s")) tableName.substring(0, tableName.length - 1)
+    else tableName
   }
 }
