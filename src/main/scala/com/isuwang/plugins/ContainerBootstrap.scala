@@ -31,9 +31,17 @@ class ContainerBootstrap {
         val pluginClassLoaderField = springContainerClass.getField("pluginClassLoaders")
         pluginClassLoaderField.set(springContainerClass, ClassLoaderManager.pluginClassLoaders)
 
-        val mainClass = ClassLoaderManager.platformClassLoader.loadClass("com.isuwang.dapeng.container.ContainerStartup")
-        val mainMethod = mainClass.getMethod("startup")
-        mainMethod.invoke(mainClass)
+        val old = Thread.currentThread().getContextClassLoader
+        try {
+          Thread.currentThread().setContextClassLoader(ClassLoaderManager.platformClassLoader)
+
+          val mainClass = ClassLoaderManager.platformClassLoader.loadClass("com.isuwang.dapeng.container.ContainerStartup")
+          val mainMethod = mainClass.getMethod("startup")
+          mainMethod.invoke(mainClass)
+        }
+        finally {
+          Thread.currentThread().setContextClassLoader(old);
+        }
       }
       catch {
         case ex: Exception => {
