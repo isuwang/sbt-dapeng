@@ -92,9 +92,10 @@ object DbGeneratorPlugin extends AutoPlugin {
     val columns = getTableColumnInfos(tableName.toLowerCase, db, connection)
     val dbClassTemplate = toDbClassTemplate(tableName,packageName,columns)
     val targetPath = baseTargetPath + "/src/main/scala/" + packageName.split("\\.").mkString("/") + "/"
+
     generateEntityFile(dbClassTemplate, targetPath + "entity/",s"${toFirstUpperCamel(tableName)}.scala")
 
-    columns.foreach(column => {
+    columns.filter(it => List("SMALLINT","TINYINT").contains(it._2.toUpperCase )).foreach(column => {
       generateEnumFile(column._1,column._3,targetPath + "enum/",packageName,s"${toFirstUpperCamel(column._1)}.scala")
     })
   }

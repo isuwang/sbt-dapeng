@@ -12,7 +12,7 @@ object DbGeneratorUtil {
 
   val driver = "com.mysql.jdbc.Driver"
   val enumRegx = """(.*\s*),(\s*\d:\s*.*\(\s*[a-zA-Z]+\)\s*;?)+""".r
-  val singleEnumRegx = """\s*([\d]+):\s*([\u4e00-\u9fa5]+|[\w]+)\(([a-zA-Z]+)\)""".r
+  val singleEnumRegx = """\s*([\d]+):\s*([\u4e00-\u9fa5|\w|-]+)\(([\d|a-zA-Z|_]+)\)""".r
 
   def generateEntityFile(fileContent: String, targetPath: String, fileName: String) = {
     val file = new File(targetPath + fileName)
@@ -24,7 +24,7 @@ object DbGeneratorUtil {
     printWriter.close()
   }
 
-  def getEnumFields(columnComment: String) = {
+  def getEnumFields(columnName : String , columnComment: String) = {
     val result = columnComment match {
       case enumRegx(a, b) =>
         val enums: Array[(String, String)] = b.split(";").map(item => {
@@ -32,26 +32,26 @@ object DbGeneratorUtil {
             case singleEnumRegx(index, cnChars, enChars) =>
               println(s"foundEnumValue index: ${index}  cnChars:${cnChars}  enChars: ${enChars}")
               (index, enChars)
-            case _ => throw new ParseException(s"invalid enum format: ${item} should looks like Int:xxx(englishWord)", 0)
+            case _ => throw new ParseException(s"invalid enum format: ${columnName} -> ${item} should looks like Int:xxx(englishWord)", 0)
           }
         })
         enums.toList
       case _ =>
         //println(s" Not match enum comment, skipped....${columnComment}")
-        List[(String,String)]()
+        List[(String, String)]()
     }
     result
   }
 
-  def generateEnumFile(columnName: String, columnComment: String, targetPath: String,packageName: String,fileName: String) = {
-    val enumFields = getEnumFields(columnComment)
+  def generateEnumFile(columnName: String, columnComment: String, targetPath: String, packageName: String, fileName: String) = {
+    val enumFields = getEnumFields(columnName,columnComment)
     if (enumFields.size > 0) {
-      generateEntityFile(toEnumFileTemplate(enumFields,packageName,columnName), targetPath,fileName)
+      generateEntityFile(toEnumFileTemplate(enumFields, packageName, columnName), targetPath, fileName)
     }
   }
 
 
-  def toDbClassTemplate(tableName: String, packageName: String,columns: List[(String, String, String)]) = {
+  def toDbClassTemplate(tableName: String, packageName: String, columns: List[(String, String, String)]) = {
     val sb = new StringBuilder(256)
     sb.append(s" package ${packageName}.entity \r\n")
 
@@ -65,7 +65,7 @@ object DbGeneratorUtil {
 
     sb.append(s" case class ${tableName} ( \r\n")
     columns.foreach(column => {
-      val hasValidEnum: Boolean = !getEnumFields(column._3).isEmpty
+      val hasValidEnum: Boolean = !getEnumFields(column._1 , column._3).isEmpty
       sb.append(s" /** ${column._3} */ \r\n")
       sb.append(toCamel(column._1)).append(": ").append(
         if (hasValidEnum) toFirstUpperCamel(column._1) else toScalaFieldType(column._2)
@@ -92,21 +92,21 @@ object DbGeneratorUtil {
 
   /**
     * EnumClass content:
-    *   class ${enumClassName} private(val id:Int, val name:String) extends DbEnum
-    *   object ${enumClassName} {
-    *      val NEW = new ${enumClassName}(0, "NEW")
-    *      def unknowne(id: Int) = new OrderStatus(id, s"<$id>")
-    *      def valueOf(id: Int): OrderStatus = id match {
-    *        case 0 => NEW
-    *        case _ => unknowne(id)
-    *      }
-    *      implicit object Accessor extends DbEnumJdbcValueAccessor[OrderStatus](valueOf)
-    *    }
+    * class ${enumClassName} private(val id:Int, val name:String) extends DbEnum
+    * object ${enumClassName} {
+    * val NEW = new ${enumClassName}(0, "NEW")
+    * def unknowne(id: Int) = new OrderStatus(id, s"<$id>")
+    * def valueOf(id: Int): OrderStatus = id match {
+    * case 0 => NEW
+    * case _ => unknowne(id)
+    * }
+    * implicit object Accessor extends DbEnumJdbcValueAccessor[OrderStatus](valueOf)
+    * }
     *
     * @param enums
     * @return
     */
-  def toEnumFileTemplate(enums: List[(String, String)],packageName: String, columnName: String): String = {
+  def toEnumFileTemplate(enums: List[(String, String)], packageName: String, columnName: String): String = {
     val sb = new StringBuilder(256)
     val enumClassName = toFirstUpperCamel(columnName)
     sb.append(s" package ${packageName}.enum \r\n")
@@ -249,13 +249,16 @@ object DbGeneratorUtil {
   def toScalaFieldType(tableFieldType: String): String = {
     tableFieldType.toUpperCase() match {
       case "INT" | "SMALLINT" | "TINYINT" => "Int"
+      case "BIGINT" => "BIGINT"
       case "CHAR" | "VARCHAR" => "String"
-      case "DECIMAL" => "BigDecimal"
+      case "DECIMAL" | "DOUBLE" | "FLOAT" => "BigDecimal"
       case "DATETIME" | "DATE" | "TIMESTAMP" => "Timestamp"
       case "ENUM" | "TEXT" => "String"
+      case "LONGBLOB" | "BLOB" | "MEDIUMBLOB" => "Array[Byte]"
       case _ => throw new ParseException(s"tableFieldType = ${tableFieldType} 无法识别", 1023)
     }
   }
+
 
   def connectJdbc(ip: String, db: String, user: String = "root", passwd: String = "root"): Connection = {
     val url = s"jdbc:mysql://${ip}/${db}?useUnicode=true&characterEncoding=utf8"
@@ -269,9 +272,8 @@ object DbGeneratorUtil {
   }
 
 
-
-  def getTableNamesByDb(db: String, connection: Connection)= {
-    val sql=s"select table_name from information_schema.tables where table_schema='${db}' and table_type='base table'";
+  def getTableNamesByDb(db: String, connection: Connection) = {
+    val sql = s"select table_name from information_schema.tables where table_schema='${db}' and table_type='base table'";
 
     val sqlStatement = connection.prepareStatement(sql)
     val resultSet = sqlStatement.executeQuery()
