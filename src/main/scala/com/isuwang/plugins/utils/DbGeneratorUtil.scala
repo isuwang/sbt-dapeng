@@ -252,7 +252,7 @@ object DbGeneratorUtil {
       case "CHAR" | "VARCHAR" => "String"
       case "DECIMAL" => "BigDecimal"
       case "DATETIME" | "DATE" | "TIMESTAMP" => "Timestamp"
-      case "ENUM" => "String"
+      case "ENUM" | "TEXT" => "String"
       case _ => throw new ParseException(s"tableFieldType = ${tableFieldType} 无法识别", 1023)
     }
   }
