@@ -140,13 +140,15 @@ object DbGeneratorUtil {
 
     sb.append(s" object ${enumClassName} { \r\n")
     enums.foreach(enum => {
-      sb.append(s"""\t val ${enum._2} = new ${enumClassName}(${enum._1},"${enum._2}") \r\n""")
+      val enumUpper = enum._2.toCharArray.map(i => if (i.isUpper) s"_${i}" else i.toUpper.toString).mkString("")
+      sb.append(s"""\t val ${enumUpper} = new ${enumClassName}(${enum._1},"${enumUpper}") \r\n""")
     })
     sb.append(s"""\t def unknown(id: Int) = new ${enumClassName}(id, id+"") \r\n""")
 
     sb.append(s"""\t def valueOf(id: Int): ${enumClassName} = id match { \r\n""")
     enums.foreach(enum => {
-      sb.append(s" \t\t case ${enum._1} => ${enum._2} \r\n")
+      val enumUpper = enum._2.toCharArray.map(i => if (i.isUpper) s"_${i}" else i.toUpper.toString).mkString("")
+      sb.append(s" \t\t case ${enum._1} => ${enumUpper} \r\n")
     })
     sb.append(" \t\t case _ => unknown(id) \r\n")
     sb.append(" } \r\n")
@@ -176,19 +178,6 @@ object DbGeneratorUtil {
       val columnInfo = (columnName,columnDataType,columnComment,columnNullable)
       columnInfos += columnInfo
     }
-
-    //    val sql = s"select column_name,data_type,column_comment from information_schema.Columns where table_name='${tableName}' and table_schema='${db}'"
-  //  val sqlStatement = connection.prepareStatement(sql)
-    //    val resultSet = sqlStatement.executeQuery()
-//    val columnInfos = mutable.MutableList[(String, String, String)]()
-//    while (resultSet.next()) {
-//      val columnInfo = (
-//        resultSet.getString("column_name"),
-//        resultSet.getString("data_type"),
-//        resultSet.getString("column_comment")
-//      )
-//      columnInfos += columnInfo
-//    }
 
     columnInfos.toList
   }
