@@ -1,7 +1,7 @@
 package com.isuwang.plugins.utils
 
 import java.io.{File, FileWriter, PrintWriter}
-import java.sql.{Connection, DriverManager}
+import java.sql.{Connection, DriverManager, ResultSet}
 import java.text.ParseException
 
 import com.isuwang.plugins.DbGeneratorPlugin
@@ -54,7 +54,7 @@ object DbGeneratorUtil {
   }
 
 
-  def toDbClassTemplate(tableName: String, packageName: String, columns: List[(String, String, String)]) = {
+  def toDbClassTemplate(tableName: String, packageName: String, columns: List[(String, String, String,String)]) = {
     val sb = new StringBuilder(256)
     val className = toFirstUpperCamel(tableNameConvert(tableName))
     sb.append(s" package ${packageName}.entity \r\n")
@@ -72,7 +72,7 @@ object DbGeneratorUtil {
       val hasValidEnum: Boolean = !getEnumFields(column._1, column._3).isEmpty
       sb.append(s" /** ${column._3} */ \r\n")
       sb.append(toCamel(keywordConvert(column._1))).append(": ").append(
-        if (hasValidEnum)toFirstUpperCamel(tableNameConvert(tableName)) + toFirstUpperCamel(column._1) else toScalaFieldType(column._2)
+        if (hasValidEnum)toFirstUpperCamel(tableNameConvert(tableName)) + toFirstUpperCamel(column._1) else toScalaFieldType(column._2,column._4)
       ).append(",\r\n")
     })
     if (sb.contains(",")) sb.delete(sb.lastIndexOf(","), sb.lastIndexOf(",") + 1)
@@ -163,21 +163,32 @@ object DbGeneratorUtil {
     sb.toString()
   }
 
-  def getTableColumnInfos(tableName: String, db: String, connection: Connection): List[(String, String, String)] = {
-    val sql = s"select column_name,data_type,column_comment from information_schema.Columns where table_name='${tableName}' and table_schema='${db}'"
+  def getTableColumnInfos(tableName: String, db: String, connection: Connection): List[(String, String, String,String)] = {
 
-    val sqlStatement = connection.prepareStatement(sql)
+    val columns: ResultSet = connection.getMetaData.getColumns("",db,tableName,"")
 
-    val resultSet = sqlStatement.executeQuery()
-    val columnInfos = mutable.MutableList[(String, String, String)]()
-    while (resultSet.next()) {
-      val columnInfo = (
-        resultSet.getString("column_name"),
-        resultSet.getString("data_type"),
-        resultSet.getString("column_comment")
-      )
+    val columnInfos = mutable.MutableList[(String, String, String,String)]()
+    while (columns.next()) {
+      val columnName = columns.getString("COLUMN_NAME")
+      val columnDataType = columns.getString("TYPE_NAME")
+      val columnComment = columns.getString("REMARKS")
+      val columnNullable = columns.getString("IS_NULLABLE")
+      val columnInfo = (columnName,columnDataType,columnComment,columnNullable)
       columnInfos += columnInfo
     }
+
+    //    val sql = s"select column_name,data_type,column_comment from information_schema.Columns where table_name='${tableName}' and table_schema='${db}'"
+  //  val sqlStatement = connection.prepareStatement(sql)
+    //    val resultSet = sqlStatement.executeQuery()
+//    val columnInfos = mutable.MutableList[(String, String, String)]()
+//    while (resultSet.next()) {
+//      val columnInfo = (
+//        resultSet.getString("column_name"),
+//        resultSet.getString("data_type"),
+//        resultSet.getString("column_comment")
+//      )
+//      columnInfos += columnInfo
+//    }
 
     columnInfos.toList
   }
@@ -255,8 +266,8 @@ object DbGeneratorUtil {
     }).mkString("")
   }
 
-  def toScalaFieldType(tableFieldType: String): String = {
-    tableFieldType.toUpperCase() match {
+  def toScalaFieldType(tableFieldType: String, isNullable: String): String = {
+    val dataType = tableFieldType.toUpperCase() match {
       case "INT" | "SMALLINT" | "TINYINT" => "Int"
       case "BIGINT" => "Long"
       case "CHAR" | "VARCHAR" => "String"
@@ -265,6 +276,11 @@ object DbGeneratorUtil {
       case "ENUM" | "TEXT" => "String"
       case "LONGBLOB" | "BLOB" | "MEDIUMBLOB" => "Array[Byte]"
       case _ => throw new ParseException(s"tableFieldType = ${tableFieldType} 无法识别", 1023)
+    }
+    if (isNullable.equals("YES")) {
+      s"Option[${dataType}]"
+    } else {
+      dataType
     }
   }
 
@@ -282,14 +298,20 @@ object DbGeneratorUtil {
 
 
   def getTableNamesByDb(db: String, connection: Connection) = {
-    val sql = s"select table_name from information_schema.tables where table_schema='${db}' and table_type='base table'";
+//    val sql = s"select table_name from information_schema.tables where table_schema='${db}' and table_type='base table'";
+//
+//    val sqlStatement = connection.prepareStatement(sql)
+//    val resultSet = sqlStatement.executeQuery()
+//    val tableNames = mutable.MutableList[String]()
+//    while (resultSet.next()) {
+//      val tableName = resultSet.getString("table_name")
+//      tableNames += tableName
+//    }
 
-    val sqlStatement = connection.prepareStatement(sql)
-    val resultSet = sqlStatement.executeQuery()
+    val tables = connection.getMetaData.getTables("",db,"",null)
     val tableNames = mutable.MutableList[String]()
-    while (resultSet.next()) {
-      val tableName = resultSet.getString("table_name")
-      tableNames += tableName
+    while (tables.next()) {
+      tableNames += tables.getString("TABLE_NAME")
     }
 
     tableNames
