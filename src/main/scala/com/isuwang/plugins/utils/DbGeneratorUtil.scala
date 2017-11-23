@@ -86,7 +86,7 @@ object DbGeneratorUtil {
     *
     * */
     sb.append(s" object ${className} { \r\n")
-    sb.append(s" \timplicit val resultSetMapper: ResultSetMapper[${className}] = ResultSetMapper.meterial[${className}] \r\n")
+    sb.append(s" \timplicit val resultSetMapper: ResultSetMapper[${className}] = ResultSetMapper.material[${className}] \r\n")
     sb.append(" }")
 
     sb.toString()
