@@ -1,5 +1,8 @@
 package com.isuwang.plugins
 
+import java.io.FileInputStream
+import java.util.Properties
+
 import sbt._
 import sbtdocker.DockerKeys.{docker, imageNames}
 import sbt.Keys._
@@ -16,9 +19,15 @@ object ImageGeneratorPlugin extends AutoPlugin {
 
   override lazy val projectSettings = Seq(
     dockerfile in docker := {
-      // any vals to be declared here
       new sbtdocker.mutable.Dockerfile {
-        from("docker.oa.isuwang.com:5000/system/dapeng-container:1.2.1")
+        val projectPath = (baseDirectory in Compile).value.getAbsolutePath
+        val propertiesFile=new File(projectPath + "/dapeng.properties")
+        val dapengVersion=if(propertiesFile.canRead){
+          val properties = new Properties()
+          properties.load(new FileInputStream(propertiesFile))
+          properties.getProperty("dapeng.version")
+        }
+        from("docker.oa.isuwang.com:5000/system/dapeng-container:"+dapengVersion)
 
         val containerHome = "/dapeng-container"
         run("mkdir", "-p", containerHome)
@@ -46,6 +55,7 @@ object ImageGeneratorPlugin extends AutoPlugin {
       )
     )
   )
+
 
 
 
