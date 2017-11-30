@@ -39,7 +39,9 @@ object ImageGeneratorPlugin extends AutoPlugin {
         val appDependency:Seq[File] = (fullClasspathAsJars in Compile).value.map(
           _.data
         )
-        copy(appDependency, containerHome + "/apps/")
+        val projectName:String= name.value;
+        run("mkdir","-p","/apps/"+projectName)
+        copy(appDependency, containerHome + "/apps/"+projectName+"/")
         copy(startupFile, containerHome + "/bin/")
         run("chmod", "+x", containerHome + "/bin/startup.sh")
         workDir(containerHome + "/bin")
