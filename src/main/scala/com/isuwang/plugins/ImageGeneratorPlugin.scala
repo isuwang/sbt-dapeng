@@ -26,10 +26,10 @@ object ImageGeneratorPlugin extends AutoPlugin {
         lazy val sourceFilesPath = (baseDirectory in Compile).value.getAbsolutePath + System.getProperty("file.separator") +"docker"+ System.getProperty("file.separator") + "startup.sh"
         lazy val startupFile = new File(sourceFilesPath)
 
-        val appDependency = (fullClasspath in Compile).value.map(
+        val appDependency:Seq[File] = (fullClasspathAsJars in Compile).value.map(
           _.data
         )
-        copy(appDependency, containerHome + "/apps")
+        copy(appDependency, containerHome + "/apps/")
         copy(startupFile, containerHome + "/bin/")
         run("chmod", "+x", containerHome + "/bin/startup.sh")
         workDir(containerHome + "/bin")
