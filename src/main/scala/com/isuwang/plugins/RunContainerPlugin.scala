@@ -1,13 +1,16 @@
 package com.isuwang.plugins
 
-import java.io.FileInputStream
+import java.io.{File, FileInputStream}
 import java.net.URL
 import java.util.Properties
 
 import org.slf4j.LoggerFactory
 import sbt.Keys._
 import sbt.{AutoPlugin, _}
+
 import collection.JavaConversions._
+import scala.annotation.tailrec
+import scala.collection.mutable
 
 /**
   * Created by lihuimin on 2017/11/8.
@@ -16,6 +19,7 @@ object RunContainerPlugin extends AutoPlugin {
 
   val runContainer = taskKey[Unit]("run dapeng container")
   val logger = LoggerFactory.getLogger(getClass)
+  val sourceCodeMap = mutable.HashMap[String,Long]()
 
 
   def runDapeng(appClasspaths: Seq[URL]): Unit = {
@@ -25,6 +29,8 @@ object RunContainerPlugin extends AutoPlugin {
     bootstrapThread.start()
     bootstrapThread.join()
   }
+
+
 
   def loadSystemProperties(file: File): Unit = {
     if (file.canRead) {
@@ -41,8 +47,12 @@ object RunContainerPlugin extends AutoPlugin {
   override lazy val projectSettings = Seq(
     runContainer := {
       logger.info("starting dapeng container....")
-      val projectPath = (baseDirectory in Compile).value.getAbsolutePath
+      val projectPath: String = (baseDirectory in Compile).value.getAbsolutePath
       System.setProperty("soa.base", projectPath)
+
+      println(s" projectPath: ${projectPath}")
+
+      //val scalaSourceFiles = getSourceFiles(s"${projectPath}../../../src/main")
 
       loadSystemProperties(new File(projectPath + "/dapeng.properties"))
 
@@ -56,6 +66,13 @@ object RunContainerPlugin extends AutoPlugin {
     logLevel in runContainer := Level.Info
   )
 
+  def getSourceFiles(path: String): List[File] = {
+    if (!new File(path).isDirectory) {
+      List(new File(path))
+    } else {
+      new File(path).listFiles().flatMap(i => getSourceFiles(i.getPath)).toList
+    }
+  }
 
 }
 
