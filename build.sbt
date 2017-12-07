@@ -18,6 +18,6 @@ addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.5")
 
 
 libraryDependencies ++= Seq(
-  "com.isuwang" % "dapeng-code-generator" % "1.2.2" exclude("javax.servlet", "servlet-api"),
-  "com.isuwang" % "dapeng-bootstrap"% "1.2.2"
+  "com.isuwang" % "dapeng-code-generator" % "1.3.0" exclude("javax.servlet", "servlet-api"),
+  "com.isuwang" % "dapeng-bootstrap"% "1.3.0"
 )
