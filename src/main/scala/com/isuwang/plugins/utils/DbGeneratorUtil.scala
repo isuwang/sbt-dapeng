@@ -4,7 +4,8 @@ import java.io.{File, FileWriter, PrintWriter}
 import java.sql.{Connection, DriverManager, ResultSet}
 import java.text.ParseException
 
-import com.isuwang.plugins.DbGeneratorPlugin
+import com.isuwang.dapeng.impl.Bootstrap
+import com.isuwang.plugins.{ContainerBootstrap, DbGeneratorPlugin}
 import com.isuwang.plugins.utils.DbGeneratorUtil.toFirstUpperCamel
 
 import scala.collection.mutable

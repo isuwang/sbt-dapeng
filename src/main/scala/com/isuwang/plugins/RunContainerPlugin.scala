@@ -4,12 +4,12 @@ import java.io.{File, FileInputStream}
 import java.net.URL
 import java.util.Properties
 
+import com.isuwang.dapeng.impl.Bootstrap
 import org.slf4j.LoggerFactory
 import sbt.Keys._
 import sbt.{AutoPlugin, _}
 
 import collection.JavaConversions._
-import scala.annotation.tailrec
 import scala.collection.mutable
 
 /**
@@ -21,7 +21,6 @@ object RunContainerPlugin extends AutoPlugin {
   val logger = LoggerFactory.getLogger(getClass)
   val sourceCodeMap = mutable.HashMap[String,Long]()
 
-
   def runDapeng(appClasspaths: Seq[URL]): Unit = {
     val bootstrapThread = new Thread(() => {
       new ContainerBootstrap().bootstrap(appClasspaths)
@@ -29,8 +28,6 @@ object RunContainerPlugin extends AutoPlugin {
     bootstrapThread.start()
     bootstrapThread.join()
   }
-
-
 
   def loadSystemProperties(file: File): Unit = {
     if (file.canRead) {
