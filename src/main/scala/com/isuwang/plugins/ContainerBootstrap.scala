@@ -1,11 +1,11 @@
 package com.isuwang.plugins
 
-import java.lang.reflect.{Field, Method}
 import java.net.URL
 import java.util
 
-import com.isuwang.dapeng.impl.Bootstrap
+import com.isuwang.dapeng.bootstrap.Bootstrap
 import org.slf4j.{Logger, LoggerFactory}
+
 import collection.JavaConverters._
 
 
@@ -23,11 +23,11 @@ class ContainerBootstrap {
       val platformLoader = classOf[Bootstrap].getClassLoader
       Thread.currentThread().setContextClassLoader(platformLoader)
 
-      val bootStrap = platformLoader.loadClass("com.isuwang.dapeng.impl.Bootstrap");
+      val bootStrap = platformLoader.loadClass("com.isuwang.dapeng.bootstrap.Bootstrap");
       val field = bootStrap.getField("appURLs")
-      val appPaths = new util.ArrayList[java.util.List[URL]]();
-      appPaths.add(appClasspaths.asJava);
-      field.set(bootStrap, appPaths);
+      val appPaths = new util.ArrayList[java.util.List[URL]]()
+      appPaths.add(appClasspaths.asJava)
+      field.set(bootStrap, appPaths)
 
       val method = bootStrap.getMethod("main", classOf[Array[String]])
       method.invoke(null, null);

@@ -4,7 +4,6 @@ import java.io.{File, FileInputStream}
 import java.net.URL
 import java.util.Properties
 
-import com.isuwang.dapeng.impl.Bootstrap
 import org.slf4j.LoggerFactory
 import sbt.Keys._
 import sbt.{AutoPlugin, _}
