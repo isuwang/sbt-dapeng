@@ -1,6 +1,6 @@
 package com.isuwang.plugins
 
-import java.net.URL
+import java.net.{URL, URLClassLoader}
 import java.util
 
 import com.isuwang.dapeng.bootstrap.Bootstrap
@@ -20,17 +20,12 @@ class ContainerBootstrap {
 
   def bootstrap(appClasspaths: Seq[URL]): Unit = {
     try {
-      val platformLoader = classOf[Bootstrap].getClassLoader
-      Thread.currentThread().setContextClassLoader(platformLoader)
-
-      val bootStrap = platformLoader.loadClass("com.isuwang.dapeng.bootstrap.Bootstrap");
-      val field = bootStrap.getField("appURLs")
       val appPaths = new util.ArrayList[java.util.List[URL]]()
       appPaths.add(appClasspaths.asJava)
-      field.set(bootStrap, appPaths)
+      val r = classOf[Bootstrap].getClassLoader.asInstanceOf[URLClassLoader]
+      val urlStrs = (r.getURLs.toList ++: appClasspaths).map(i => i.getPath)
 
-      val method = bootStrap.getMethod("main", classOf[Array[String]])
-      method.invoke(null, null);
+      Bootstrap.main(urlStrs.toArray)
 
     }
     catch {
@@ -42,7 +37,6 @@ class ContainerBootstrap {
 
 
   }
-
 
 
 }
