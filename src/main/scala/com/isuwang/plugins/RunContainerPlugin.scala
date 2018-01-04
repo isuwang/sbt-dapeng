@@ -21,11 +21,17 @@ object RunContainerPlugin extends AutoPlugin {
   val sourceCodeMap = mutable.HashMap[String,Long]()
 
   def runDapeng(appClasspaths: Seq[URL]): Unit = {
-    val bootstrapThread = new Thread(() => {
+    val threadGroup = new ThreadGroup("dapeng")
+    val bootstrapThread = new Thread(threadGroup, () => {
       new ContainerBootstrap().bootstrap(appClasspaths)
     })
     bootstrapThread.start()
-    bootstrapThread.join()
+
+    // TODO how to wait
+    while(true){
+      Thread.sleep(60*1000);
+    }
+//    bootstrapThread.join()
   }
 
   def loadSystemProperties(file: File): Unit = {
@@ -55,6 +61,10 @@ object RunContainerPlugin extends AutoPlugin {
       val dependentClasspaths = (fullClasspath in Compile).value.map(
         _.data.toURI.toURL
       )
+
+      dependentClasspaths.foreach(println)
+      println("======")
+
       val classpathsWithDapeng = dependentClasspaths.toList
       runDapeng(classpathsWithDapeng)
     },

@@ -4,6 +4,7 @@ import java.net.{URL, URLClassLoader}
 import java.util
 
 import com.isuwang.dapeng.bootstrap.Bootstrap
+import com.isuwang.dapeng.bootstrap.classloader.ApplicationClassLoader
 import org.slf4j.{Logger, LoggerFactory}
 
 import collection.JavaConverters._
@@ -20,12 +21,17 @@ class ContainerBootstrap {
 
   def bootstrap(appClasspaths: Seq[URL]): Unit = {
     try {
-      val appPaths = new util.ArrayList[java.util.List[URL]]()
-      appPaths.add(appClasspaths.asJava)
-      val r = classOf[Bootstrap].getClassLoader.asInstanceOf[URLClassLoader]
-      val urlStrs = (r.getURLs.toList ++: appClasspaths).map(i => i.getPath)
+//      val appPaths = new util.ArrayList[java.util.List[URL]]()
+//      appPaths.add(appClasspaths.asJava)
+//      val r = classOf[Bootstrap].getClassLoader.asInstanceOf[URLClassLoader]
+//      val urlStrs = (r.getURLs.toList ++: appClasspaths).map(i => i.getPath)
+//
+//      Bootstrap.main(urlStrs.toArray)
 
-      Bootstrap.main(urlStrs.toArray)
+      // val applicationClassLoader = new ApplicationClassLoader(appClasspaths.toList)
+      Bootstrap.sbtStartup( this.getClass.getClassLoader,
+        appClasspaths.toList.asJava
+      )
 
     }
     catch {
