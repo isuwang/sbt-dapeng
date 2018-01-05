@@ -27,11 +27,7 @@ object RunContainerPlugin extends AutoPlugin {
     })
     bootstrapThread.start()
 
-    // TODO how to wait
-    while(true){
-      Thread.sleep(60*1000);
-    }
-//    bootstrapThread.join()
+    bootstrapThread.join()
   }
 
   def loadSystemProperties(file: File): Unit = {
@@ -61,9 +57,6 @@ object RunContainerPlugin extends AutoPlugin {
       val dependentClasspaths = (fullClasspath in Compile).value.map(
         _.data.toURI.toURL
       )
-
-      dependentClasspaths.foreach(println)
-      println("======")
 
       val classpathsWithDapeng = dependentClasspaths.toList
       runDapeng(classpathsWithDapeng)
