@@ -21,5 +21,6 @@ libraryDependencies ++= Seq(
   "com.isuwang" % "dapeng-code-generator" % "2.0.0-SNAPSHOT" exclude("javax.servlet", "servlet-api"),
   "com.isuwang" % "dapeng-container-impl"% "2.0.0-SNAPSHOT",
   "com.isuwang" % "dapeng-bootstrap" % "2.0.0-SNAPSHOT",
-  "com.isuwang" % "dapeng-client-netty"% "2.0.0-SNAPSHOT"
+  "com.isuwang" % "dapeng-client-netty"% "2.0.0-SNAPSHOT",
+  "mysql" % "mysql-connector-java" % "5.1.36"
 )

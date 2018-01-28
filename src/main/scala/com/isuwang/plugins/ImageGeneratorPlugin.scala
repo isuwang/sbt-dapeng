@@ -46,7 +46,7 @@ object ImageGeneratorPlugin extends AutoPlugin {
         run("chmod", "+x", containerHome + "/bin/startup.sh")
         workDir(containerHome + "/bin")
 
-        cmd("/bin/sh", "-c", containerHome + "/bin/startup.sh && tail -F " + containerHome + "/bin/startup.sh")
+        cmdShell("/bin/sh", "-c", containerHome + "/bin/startup.sh")
       }
     },
 
