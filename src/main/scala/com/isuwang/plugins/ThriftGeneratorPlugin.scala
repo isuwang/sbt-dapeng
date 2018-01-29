@@ -1,6 +1,6 @@
 package com.isuwang.plugins
 
-import com.isuwang.dapeng.code.Scrooge
+import com.github.dapeng.code.Scrooge
 import sbt.AutoPlugin
 import sbt.Keys._
 import sbt._

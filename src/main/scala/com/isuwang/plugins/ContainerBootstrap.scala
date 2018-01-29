@@ -2,7 +2,7 @@ package com.isuwang.plugins
 
 import java.net.URL
 
-import com.isuwang.dapeng.bootstrap.Bootstrap
+import com.github.dapeng.bootstrap.Bootstrap
 import org.slf4j.{Logger, LoggerFactory}
 
 import collection.JavaConverters._
