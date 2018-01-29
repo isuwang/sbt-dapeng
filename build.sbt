@@ -1,5 +1,5 @@
 
-name := "sbt-idlc"
+name := "sbt-dapeng"
 
 version := "0.1-SNAPSHOT"
 
