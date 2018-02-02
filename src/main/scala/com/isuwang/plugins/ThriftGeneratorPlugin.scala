@@ -3,9 +3,8 @@ package com.isuwang.plugins
 import java.io.File
 
 import com.github.dapeng.code.Scrooge
-import sbt.AutoPlugin
+import sbt.{AutoPlugin, Def, _}
 import sbt.Keys._
-import sbt._
 
 import scala.io._
 
@@ -64,45 +63,45 @@ object ThriftGeneratorPlugin extends AutoPlugin{
     val scalaFiles: Seq[File] = getFiles(scalaTargetPath)
     scalaFiles.foreach(i => println(s" scalaFiles: ${i.getAbsolutePath}"))
 
-    val oldResourceFilePath = s"${targetFilePath}/resources"
-    val resourceFiles = getFiles(oldResourceFilePath)
-    val newResourcePath = resourceFilePath
+//    val oldResourceFilePath = s"${targetFilePath}/resources"
+//    val resourceFiles = getFiles(oldResourceFilePath)
+//    val newResourcePath = resourceFilePath
 
-    resourceFiles.foreach(oldFile => {
-      val newFile = new File(newResourcePath + s"/${oldFile.getName}")
-      IO.copy(Traversable((oldFile,newFile)))
-    })
+//    resourceFiles.foreach(oldFile => {
+//      val newFile = new File(newResourcePath + s"/${oldFile.getName}")
+//      IO.copy(Traversable((oldFile,newFile)))
+//    })
 
-    //code-generator默认会在dirRoot添加 /java/ 文件夹,需要删掉
-    val newJavaFiles: Seq[File] = javaFiles.map(javaFile => {
-      val newJavaFilePath = javaFile.getAbsolutePath.replaceFirst("java","");
-      val newJavaFile = new File(newJavaFilePath)
-      IO.copy(Traversable((javaFile,newJavaFile)))
-      newJavaFile
-    })
-
-    //code-generator默认会在dirRoot添加 /scala/ 文件夹,需要删掉
-    val newScalaFiles: Seq[File] = scalaFiles.map(scalaFile => {
-      val newScalaFilePath = scalaFile.getAbsolutePath.replaceFirst("/scala/","/");
-      val newScalaFile = new File(newScalaFilePath)
-      IO.copy(Traversable((scalaFile,newScalaFile)))
-      newScalaFile
-    })
-
-    val newFiles = getFiles(newResourcePath)
-    newFiles.foreach(f => println(s"new generatedFile: ${f.getAbsolutePath}"))
-
-    println(s"---------- start to remove old resource file from source folder: ${targetFilePath + "/resources"} -------")
-    val oldFiles = new File(targetFilePath + "/resources")
-    deleteDir(oldFiles.getAbsolutePath)
-    println(s"---------- end to remove old resource file from source folder: ${targetFilePath + "/resources"} -------")
-
-
-    val oldJavaFiles = new File(targetFilePath + "/java")
-    deleteDir(oldJavaFiles.getAbsolutePath)
-
-    val oldScalaFiles = new File(targetFilePath + "/scala")
-    deleteDir(oldScalaFiles.getAbsolutePath)
+//    //code-generator默认会在dirRoot添加 /java/ 文件夹,需要删掉
+//    val newJavaFiles: Seq[File] = javaFiles.map(javaFile => {
+//      val newJavaFilePath = javaFile.getAbsolutePath.replaceFirst("java","");
+//      val newJavaFile = new File(newJavaFilePath)
+//      IO.copy(Traversable((javaFile,newJavaFile)))
+//      newJavaFile
+//    })
+//
+//    //code-generator默认会在dirRoot添加 /scala/ 文件夹,需要删掉
+//    val newScalaFiles: Seq[File] = scalaFiles.map(scalaFile => {
+//      val newScalaFilePath = scalaFile.getAbsolutePath.replaceFirst("/scala/","/");
+//      val newScalaFile = new File(newScalaFilePath)
+//      IO.copy(Traversable((scalaFile,newScalaFile)))
+//      newScalaFile
+//    })
+//
+//    val newFiles = getFiles(newResourcePath)
+//    newFiles.foreach(f => println(s"new generatedFile: ${f.getAbsolutePath}"))
+//
+//    println(s"---------- start to remove old resource file from source folder: ${targetFilePath + "/resources"} -------")
+//    val oldFiles = new File(targetFilePath + "/resources")
+//    deleteDir(oldFiles.getAbsolutePath)
+//    println(s"---------- end to remove old resource file from source folder: ${targetFilePath + "/resources"} -------")
+//
+//
+//    val oldJavaFiles = new File(targetFilePath + "/java")
+//    deleteDir(oldJavaFiles.getAbsolutePath)
+//
+//    val oldScalaFiles = new File(targetFilePath + "/scala")
+//    deleteDir(oldScalaFiles.getAbsolutePath)
 
     javaFiles ++ scalaFiles
 
