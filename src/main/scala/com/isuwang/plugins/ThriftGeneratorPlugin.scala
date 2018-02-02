@@ -23,9 +23,15 @@ object ThriftGeneratorPlugin extends AutoPlugin{
     generateFiles(sourceFilesPath,targetFilePath)
   }
 
+  def generateResourceFileTask = Def.task {
+    lazy val targetFilePath =  (baseDirectory in Compile).value.getAbsolutePath + "/target/scala-2.12/src-generated/resources"
+    getFiles(targetFilePath)
+  }
+
   override lazy val projectSettings = inConfig(Compile)(Seq(
     generateFiles := generateFilesTask.value,
-    sourceGenerators += generateFiles.taskValue
+    sourceGenerators += generateFiles.taskValue,
+    resourceGenerators += generateResourceFileTask.taskValue
   ))
 
   def generateFiles(sourceFilePath: String, targetFilePath: String) = {
