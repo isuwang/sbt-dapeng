@@ -20,13 +20,13 @@ object ThriftGeneratorPlugin extends AutoPlugin{
 
   def generateFilesTask = Def.task {
     lazy val sourceFilesPath = (baseDirectory in Compile).value.getAbsolutePath + "/src/main/resources"
-    lazy val targetFilePath =  (baseDirectory in Compile).value.getAbsolutePath + "/target/scala-2.12/src-generated"
-
-    generateFiles(sourceFilesPath,targetFilePath)
+    lazy val targetFilePath =  (baseDirectory in Compile).value.getAbsolutePath + "/target/scala-2.12/src_managed/main"
+    lazy val resourceFilePath = (baseDirectory in Compile).value.getAbsolutePath + "/target/scala-2.12/resource_managed/main"
+    generateFiles(sourceFilesPath,targetFilePath, resourceFilePath)
   }
 
   def generateResourceFileTask = Def.task {
-    lazy val targetFilePath =  (baseDirectory in Compile).value.getAbsolutePath + "/target/scala-2.12/src-generated/resources"
+    lazy val targetFilePath =  (baseDirectory in Compile).value.getAbsolutePath + "/target/scala-2.12/src_managed/main/resources"
     val files: Seq[File] = getFiles(targetFilePath)
     println("resource file size: " + files.size)
     files.foreach(file => println(s" generated resource file: ${file.getAbsoluteFile}"))
@@ -35,12 +35,12 @@ object ThriftGeneratorPlugin extends AutoPlugin{
 
   override lazy val projectSettings = inConfig(Compile)(Seq(
     generateFiles := generateFilesTask.value,
-    resourceGenerateFiles := generateResourceFileTask.value,
-    sourceGenerators += generateFiles.taskValue,
-    resourceGenerators += resourceGenerateFiles.taskValue
+    sourceGenerators += generateFiles.taskValue
   ))
 
-  def generateFiles(sourceFilePath: String, targetFilePath: String) = {
+  resourceGenerators in sbt.Keys.`package` += generateResourceFileTask.taskValue
+
+  def generateFiles(sourceFilePath: String, targetFilePath: String, resourceFilePath: String) = {
 
     println("Welcome to use generate plugin...")
     val javaTargetPath = targetFilePath + "/java"
@@ -64,6 +64,21 @@ object ThriftGeneratorPlugin extends AutoPlugin{
 
     val scalaFiles: Seq[File] = getFiles(scalaTargetPath)
     scalaFiles.foreach(i => println(s" scalaFiles: ${i.getAbsolutePath}"))
+
+    val oldResourceFilePath = s"${targetFilePath}/resources"
+    val resourceFiles = getFiles(oldResourceFilePath)
+    val newResourcePath = resourceFilePath
+
+    resourceFiles.foreach(oldFile => {
+      val newFile = new File(newResourcePath + s"/${oldFile.getName}")
+      IO.copy(Traversable((oldFile,newFile)))
+    })
+
+    val newFiles = getFiles(newResourcePath)
+    newFiles.foreach(f => println(s"new generatedFile: ${f.getAbsolutePath}"))
+
+    val oldFiles = new File(targetFilePath + "/resources")
+    if (oldFiles.isDirectory) oldFiles.delete()
 
     javaFiles ++ scalaFiles
 
