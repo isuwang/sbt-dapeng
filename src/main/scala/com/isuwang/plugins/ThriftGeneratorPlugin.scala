@@ -16,6 +16,8 @@ object ThriftGeneratorPlugin extends AutoPlugin{
 
   val generateFiles = taskKey[Seq[java.io.File]]("generate thrift file sources")
 
+  val resourceGenerateFiles = taskKey[Seq[java.io.File]]("generate thrift file sources")
+
   def generateFilesTask = Def.task {
     lazy val sourceFilesPath = (baseDirectory in Compile).value.getAbsolutePath + "/src/main/resources"
     lazy val targetFilePath =  (baseDirectory in Compile).value.getAbsolutePath + "/target/scala-2.12/src-generated"
@@ -25,13 +27,17 @@ object ThriftGeneratorPlugin extends AutoPlugin{
 
   def generateResourceFileTask = Def.task {
     lazy val targetFilePath =  (baseDirectory in Compile).value.getAbsolutePath + "/target/scala-2.12/src-generated/resources"
-    getFiles(targetFilePath)
+    val files: Seq[File] = getFiles(targetFilePath)
+    println("resource file size: " + files.size)
+    files.foreach(file => println(s" generated resource file: ${file.getAbsoluteFile}"))
+    files
   }
 
   override lazy val projectSettings = inConfig(Compile)(Seq(
     generateFiles := generateFilesTask.value,
+    resourceGenerateFiles := generateResourceFileTask.value,
     sourceGenerators += generateFiles.taskValue,
-    resourceGenerators += generateResourceFileTask.taskValue
+    resourceGenerators += resourceGenerateFiles.taskValue
   ))
 
   def generateFiles(sourceFilePath: String, targetFilePath: String) = {
@@ -82,16 +88,20 @@ object ThriftGeneratorPlugin extends AutoPlugin{
 
 
   def main(args: Array[String]): Unit = {
-    val path = "/Users/jackliang/dev/github/sbt-dapeng" + "/target/scala-2.12/src-generated"
+    val path = "/Users/jackliang/dev/github/dapeng_test/dapeng_test-api/target/scala-2.12/src-generated/resources"
+    val files = getFiles(path);
 
-    val file = new File(path);
-    println(s" folder exists: ${file.exists()}, isFolder: ${file.isDirectory}")
+    println(s"file size: ${files.size}")
 
-    createForlder(path);
-
-    val file1 = new File(path);
-
-    println(s" folder exists: ${file1.exists()}, isFolder: ${file1.isDirectory}")
+    files.foreach(f => println(f.getAbsoluteFile))
+//    val file = new File(path);
+//    println(s" folder exists: ${file.exists()}, isFolder: ${file.isDirectory}")
+//
+//    createForlder(path);
+//
+//    val file1 = new File(path);
+//
+//    println(s" folder exists: ${file1.exists()}, isFolder: ${file1.isDirectory}")
   }
 
   def getFiles(path: String): List[File] = {
